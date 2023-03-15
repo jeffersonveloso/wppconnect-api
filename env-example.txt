@@ -1,0 +1,10 @@
+#Url for webhook
+WEBOOK_BASE_URL=""
+WEBOOK_SSL_VERIFY="false"
+DISABLE_WEBHOOK="false"
+SEND_ACKS="false"
+MAX_SYNC_TIME=120
+
+#Info for setting browser data
+BROWSER_CLIENT="TEST-MD"
+BROWSER_NAME="Chrome"

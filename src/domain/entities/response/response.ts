@@ -2,11 +2,10 @@ import {
   ConnectionInfo,
   EventTypes,
   IncomingCallEventContent,
-  MessageDeliveryEventContent,
   MessageKey,
   MessageSent,
   StatusTypes,
-} from '@baileys/domain/entities/whatsapp/whatsapp.entity';
+} from '../whatsapp/whatsapp.entity';
 
 export class VoidSuccess {
   success: boolean;
@@ -14,6 +13,28 @@ export class VoidSuccess {
   constructor({ success }: { success: boolean }) {
     Object.assign(this, {
       success,
+    });
+  }
+}
+
+export class SuccessResponse<T> {
+  success: boolean;
+  totalOfRecords?: number;
+  data: T | T[];
+
+  constructor({
+    success,
+    totalOfRecords,
+    data,
+  }: {
+    success: boolean;
+    totalOfRecords?: number;
+    data: T | T[];
+  }) {
+    Object.assign(this, {
+      success,
+      totalOfRecords,
+      data,
     });
   }
 }
@@ -58,6 +79,8 @@ export class ConnectionEvent {
   eventType: EventTypes;
   instanceKey: string;
   status: StatusTypes;
+  progressSync?: number;
+  maxSyncTimeout?: number;
   isReconnecting?: boolean;
   reason?: number | string;
   reasonStatusCode?: number;
@@ -67,6 +90,8 @@ export class ConnectionEvent {
     eventType,
     instanceKey,
     status,
+    progressSync,
+    maxSyncTimeout,
     isReconnecting,
     reason,
     reasonStatusCode,
@@ -75,6 +100,8 @@ export class ConnectionEvent {
     eventType: EventTypes;
     instanceKey: string;
     status: StatusTypes;
+    progressSync?: number;
+    maxSyncTimeout?: number;
     isReconnecting?: boolean;
     reason?: number | string;
     reasonStatusCode?: number;
@@ -84,6 +111,8 @@ export class ConnectionEvent {
       eventType,
       instanceKey,
       status,
+      progressSync,
+      maxSyncTimeout,
       isReconnecting,
       reason,
       reasonStatusCode,
@@ -96,7 +125,7 @@ export class MessageDeliveryEvent {
   eventType: EventTypes;
   instanceKey: string;
   key: MessageKey;
-  update: MessageDeliveryEventContent;
+  update: any;
 
   constructor({
     eventType,
@@ -107,7 +136,7 @@ export class MessageDeliveryEvent {
     eventType: EventTypes;
     instanceKey: string;
     key: MessageKey;
-    update: MessageDeliveryEventContent;
+    update: any;
   }) {
     Object.assign(this, {
       eventType,

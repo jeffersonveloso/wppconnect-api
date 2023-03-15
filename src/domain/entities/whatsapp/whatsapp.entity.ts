@@ -1,10 +1,16 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { randomUUID } from 'crypto';
 
+export enum EngineTypes {
+  baileys = 'baileys',
+  wppconnect = 'wppconnect',
+}
+
 export enum ConnectionState {
   open = 'open',
   close = 'close',
   connecting = 'connecting',
+  conflict = 'conflict',
 }
 
 export enum EventTypes {
@@ -25,6 +31,7 @@ export enum StatusTypes {
   CRASHED = 'CRASHED',
   RECONNECTING = 'RECONNECTING',
   LOGGED_OUT = 'LOGGED_OUT',
+  SYNCHRONIZING = 'SYNCHRONIZING',
 }
 
 export enum MessageDeliveryStatus {
@@ -69,7 +76,7 @@ export interface IncomingCallEventContent {
   status: string;
 }
 
-export class ConnectionEntity {
+export class ConnectionEntity<T> {
   @ApiProperty({ required: true })
   webhookUrl: string;
 
@@ -84,311 +91,139 @@ export class ConnectionEntity {
 
   @ApiProperty({ default: 0, required: false, maximum: 10, minimum: 6 })
   connectionAttempts?: number;
+
+  @ApiProperty({ default: EngineTypes.wppconnect, required: true })
+  engineType: EngineTypes;
+
+  status: StatusTypes;
+  urlcode?: string;
+  progressSync?: number;
+  maxSyncTimeout?: number;
+  lockInitialSync?: boolean;
+  connected?: boolean;
+  newLogin?: boolean;
+  client?: T;
 }
 
-class DefaultParameters {
+export class DefaultParameters {
   @ApiProperty({ required: true })
   to: string;
 }
 
-export class ConnectionInfo extends ConnectionEntity {
+export class ConnectionInfo extends ConnectionEntity<any> {
   user: ProfileAccountInfo;
 }
 
-class TextMessage {
+export class LinkPreview {
   @ApiProperty()
-  text: string;
+  canonicalUrl: string;
+
+  @ApiProperty()
+  matchedText: string;
+
+  @ApiProperty()
+  title: string;
+
+  @ApiProperty()
+  description: string;
+
+  @ApiProperty()
+  jpegThumbnailUrl?: string;
+
+  @ApiProperty()
+  jpegThumbnailBuffer?: Buffer;
 }
 
 export class OutputTextMessage extends DefaultParameters {
   @ApiProperty()
-  textMessage: TextMessage;
-}
+  text: string;
 
-//PRECISA INCLUIR OUTROS TIPOS DE RESPOSTA
-export class OutputReplyMessage extends DefaultParameters {
   @ApiPropertyOptional()
-  participant?: string;
+  url?: string;
 
-  @ApiProperty()
-  answer: TextMessage;
-
-  @ApiProperty()
-  messageId: string;
-
-  @ApiProperty()
-  message: Record<string, any>;
+  @ApiPropertyOptional()
+  linkPreview?: LinkPreview;
 }
 
-class MentionsMessageContent {
+export class OutputUrlMediaMessage extends DefaultParameters {
   @ApiProperty()
-  text: string;
-
-  @ApiProperty({ type: [String] })
-  mentions: string[];
-}
-
-export class OutputMentionsMessage extends DefaultParameters {
-  @ApiProperty()
-  mentionsMessage: MentionsMessageContent;
-}
-
-class ContactMessageContent {
-  @ApiProperty()
-  fullName: string;
-
-  @ApiProperty()
-  displayName: string;
-
-  @ApiProperty()
-  organization?: string;
-
-  @ApiProperty()
-  phoneNumber: string;
-}
-
-export class OutputContactMessage extends DefaultParameters {
-  @ApiProperty()
-  contactMessage: ContactMessageContent;
-}
-
-class LocationData {
-  @ApiProperty()
-  degreesLatitude: number;
-
-  @ApiProperty()
-  degreesLongitude: number;
-}
-
-class LocationMessageContent {
-  @ApiProperty()
-  location: LocationData;
-}
-
-export class OutputLocationMessage extends DefaultParameters {
-  @ApiProperty()
-  locationMessage: LocationMessageContent;
-}
-
-class ButtonText {
-  @ApiProperty()
-  displayText: string;
-}
-class ButtonsData {
-  @ApiProperty()
-  buttonId: string;
-
-  @ApiProperty()
-  buttonText: ButtonText;
-
-  @ApiProperty()
-  type: number;
-}
-
-class ButtonsMessageContent {
-  @ApiProperty()
-  text: string;
-
-  @ApiProperty()
-  footer: string;
-
-  @ApiProperty({ default: 1 })
-  headerType: number;
-
-  @ApiProperty({ type: [ButtonsData] })
-  buttons: ButtonsData[];
-}
-
-export class OutputButtonsMessage extends DefaultParameters {
-  @ApiProperty()
-  buttonsMessage: ButtonsMessageContent;
-}
-
-class ButtonsMessageWithImageContent {
-  @ApiProperty()
-  caption: string;
-
-  @ApiProperty()
-  footerText: string;
-
-  @ApiProperty({ default: 4 })
-  headerType: number;
-
-  @ApiProperty()
-  mediaUrl: string;
+  type: 'video' | 'audio' | 'image' | 'document';
 
   @ApiProperty()
   mimeType: string;
 
-  @ApiProperty({ default: 'image' })
-  mediaType: string;
-
-  @ApiProperty({ type: [ButtonsData] })
-  buttons: ButtonsData[];
-}
-
-export class OutputButtonsMessageWithImage extends DefaultParameters {
   @ApiProperty()
-  buttonsMessage: ButtonsMessageWithImageContent;
-}
-
-class UrlButtonContent {
-  @ApiProperty()
-  displayText: string;
+  caption?: string;
 
   @ApiProperty()
   url: string;
-}
-
-class UrlButton {
-  @ApiProperty({ required: true })
-  index: number;
 
   @ApiProperty()
-  urlButton: UrlButtonContent;
+  footer?: string;
 }
 
-class CallButtonContent {
+export class TemplateButton {
   @ApiProperty()
-  displayText: string;
+  type: 'replyButton' | 'urlButton' | 'callButton';
 
   @ApiProperty()
-  phoneNumber: string;
+  title: string;
+
+  @ApiPropertyOptional()
+  payload: string;
 }
 
-class CallButton {
-  @ApiProperty({ required: true })
-  index: number;
-
-  @ApiProperty()
-  callButton: CallButtonContent;
-}
-
-class QuickReplyButtonContent {
-  @ApiProperty()
-  displayText: string;
-
-  @ApiProperty()
-  id: string;
-}
-class QuickReplyButton {
-  @ApiProperty({ required: true })
-  index: number;
-
-  @ApiProperty()
-  quickReplyButton: QuickReplyButtonContent;
-}
-
-export class TemplateButtons {
-  @ApiPropertyOptional({ required: false })
-  urlButton?: UrlButton;
-
-  @ApiPropertyOptional({ required: false })
-  callButton?: CallButton;
-
-  @ApiPropertyOptional({ required: false })
-  quickReplyButton?: QuickReplyButton;
-}
-
-class TemplateMessageContent {
+export class OutputTemplateButtonMessage extends DefaultParameters {
   @ApiProperty()
   text: string;
 
-  @ApiProperty()
-  footer: string;
+  @ApiPropertyOptional()
+  title: string;
+
+  @ApiProperty({ type: [TemplateButton] })
+  buttons: TemplateButton[];
 
   @ApiProperty()
-  templateButtons: TemplateButtons;
+  footerText: string;
 }
 
-export class OutputTemplateMessage extends DefaultParameters {
-  @ApiProperty()
-  templateMessage: TemplateMessageContent;
-}
-
-class TemplateMessageWithImageContent {
-  @ApiProperty()
-  caption: string;
-
-  @ApiProperty()
-  footer: string;
-
-  @ApiProperty()
-  mediaUrl: string;
-
-  @ApiProperty({ default: 'image' })
-  mediaType: string;
-
-  @ApiProperty()
-  mimeType: string;
-
-  @ApiProperty()
-  templateButtons: TemplateButtons;
-}
-
-export class OutputTemplateMessageWithImage extends DefaultParameters {
-  @ApiProperty()
-  templateMessage: TemplateMessageWithImageContent;
-}
-
-class ListSections {
+export class ListRow {
   @ApiProperty()
   title: string;
 
   @ApiProperty()
-  rows: ListSectionRow[];
-}
-
-class ListSectionRow {
-  @ApiProperty()
-  title: string;
+  description: string;
 
   @ApiProperty()
   rowId: string;
-
-  @ApiPropertyOptional()
-  description?: string;
 }
 
-class ListMessageContent {
-  @ApiProperty()
-  text: string;
-
-  @ApiProperty()
-  footer: string;
-
+export class ListSection {
   @ApiProperty()
   title: string;
 
-  @ApiProperty()
-  buttonText: string;
-
-  @ApiProperty({ type: [ListSections] })
-  sections: ListSections[];
+  @ApiProperty({ type: [ListRow] })
+  rows: ListRow[];
 }
 
 export class OutputListMessage extends DefaultParameters {
   @ApiProperty()
-  listMessage: ListMessageContent;
-}
+  buttonText: string;
 
-interface ReactionData {
+  @ApiProperty()
   text: string;
-  key: MessageKey;
-}
 
-class ReactionMessageContent {
   @ApiProperty()
-  react: Record<string, ReactionData>;
-}
+  title: string;
 
-export class OutputReactionMessage extends DefaultParameters {
   @ApiProperty()
-  reactionMessage: ReactionMessageContent;
-}
+  description: string;
 
-export interface MessageDeliveryEventContent {
-  status: MessageDeliveryStatus | string;
+  @ApiProperty({ type: [ListSection] })
+  sections: ListSection[];
+
+  @ApiProperty()
+  listType: number;
 }
 
 export class UpdatePresence extends DefaultParameters {
@@ -408,16 +243,5 @@ export interface MessageSent {
   to: string;
   messageId: string;
   status: string;
-  message:
-    | TextMessage
-    | OutputReplyMessage
-    | MentionsMessageContent
-    | ContactMessageContent
-    | LocationMessageContent
-    | ButtonsMessageContent
-    | ButtonsMessageWithImageContent
-    | OutputListMessage
-    | TemplateMessageContent
-    | TemplateMessageWithImageContent
-    | ReactionMessageContent;
+  message: any;
 }
