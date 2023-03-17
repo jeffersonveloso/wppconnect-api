@@ -1,27 +1,9 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Param,
-  Post,
-  Query,
-} from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import {
-  SentMessageSuccess,
-  VoidSuccess,
-} from '../domain/entities/response/response';
-import { WhatsappService } from './services/whatsapp/whatsapp.service';
-import {
-  ConnectionEntity,
-  DefaultParameters,
-  OutputListMessage,
-  OutputTemplateButtonMessage,
-  OutputTextMessage,
-  OutputUrlMediaMessage,
-  UpdatePresence,
-} from '../domain/entities/whatsapp/whatsapp.entity';
+import { Controller, Get, HttpCode, Param, Post, Query } from "@nestjs/common";
+import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
+import { SentMessageSuccess, VoidSuccess } from "../domain/entities/response/response";
+import { WhatsappService } from "./services/whatsapp/whatsapp.service";
+import { EngineTypes, StatusTypes } from "../domain/entities/whatsapp/whatsapp.entity";
+import * as process from "process";
 
 @Controller('instance')
 @ApiTags('Rotinas da automação do whatsapp')
@@ -38,8 +20,18 @@ export class WhatsappController {
   @ApiOperation({
     summary: 'Chamada para realizar a conexão com o whatsapp',
   })
-  async connect(@Body() body: ConnectionEntity<any>): Promise<VoidSuccess> {
-    return this.whatsappService.startConnection(body);
+  async connect(
+    @Query('instanceKey') instanceKey: string,
+  ): Promise<VoidSuccess> {
+    return this.whatsappService.startConnection({
+      webhookUrl: process.env.WEBOOK_BASE_URL,
+      instanceKey: instanceKey,
+      disableWebhook: false,
+      emitAcks: false,
+      connectionAttempts: 0,
+      status: StatusTypes.DISCONNECTED,
+      engineType: EngineTypes.wppconnect,
+    });
   }
 
   @Get('/list')
