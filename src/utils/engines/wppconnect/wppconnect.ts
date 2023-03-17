@@ -487,7 +487,7 @@ export class WppConnectClient {
           session: connectionEntity.instanceKey,
           tokenStore: 'file',
           folderNameToken: `${this.rootPath}/wppconnect`, //folder name when saving tokens
-          deviceName: process.env.BROWSER_CLIENT,
+          //deviceName: process.env.BROWSER_CLIENT,
           puppeteerOptions: {
             userDataDir: `${this.rootPath}/wppconnect/${connectionEntity.instanceKey}`, // or your custom directory
             executablePath:
