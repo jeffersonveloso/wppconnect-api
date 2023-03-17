@@ -14,11 +14,11 @@ async function bootstrap(expressInstance: express.Express) {
     new ExpressAdapter(expressInstance),
   );
 
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('rest');
 
   const options = new DocumentBuilder()
-    .setTitle('Baileys Server')
-    .setDescription('Backend Baileys')
+    .setTitle('WppConnect Server')
+    .setDescription('Backend WppConnect')
     .setVersion('1.0')
     .build();
 
