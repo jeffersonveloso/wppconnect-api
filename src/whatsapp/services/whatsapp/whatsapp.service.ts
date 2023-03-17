@@ -19,7 +19,6 @@ import { WppConnectClient } from '../../../utils/engines/wppconnect/wppconnect';
 import { clientsArray } from '../../../utils/constants';
 import { readdirSync } from 'fs';
 import { join } from 'path';
-import * as process from 'process';
 
 @Injectable()
 export class WhatsappService {
@@ -40,33 +39,39 @@ export class WhatsappService {
   }
 
   async reconnectSessions() {
-    // Restore all instances
-    const instanceKeys: string[] = [];
-    const listOfFiles = readdirSync(`${this.rootPath}/wppconnect`);
+    try {
+      // Restore all instances
+      const instanceKeys: string[] = [];
+      const listOfFiles = readdirSync(`${this.rootPath}/wppconnect`);
 
-    listOfFiles.map((file) => {
-      const filename = this.getInstanceName(file);
-      if (filename) instanceKeys.push(this.getInstanceName(filename));
-    });
+      listOfFiles.map((file) => {
+        const filename = this.getInstanceName(file);
+        if (filename) instanceKeys.push(this.getInstanceName(filename));
+      });
 
-    for (const instanceKey of instanceKeys) {
-      const engine = this.wppConnectClient;
-      const connectionEntity = {
-        instanceKey: instanceKey,
-        webhookUrl: process.env.WEBOOK_BASE_URL,
-        disableWebhook: process.env.DISABLE_WEBHOOK !== 'false',
-        emitAcks: process.env.SEND_ACKS !== 'false',
-        connectionAttempts: 0,
-        engineType: EngineTypes.wppconnect,
-        status: StatusTypes.DISCONNECTED,
-        progressSync: 0,
-        maxSyncTimeout: 0,
-        lockInitialSync: false,
-        connected: false,
-        newLogin: false,
-      };
+      for (const instanceKey of instanceKeys) {
+        const engine = this.wppConnectClient;
+        const connectionEntity = {
+          instanceKey: instanceKey,
+          webhookUrl: process.env.WEBOOK_BASE_URL,
+          disableWebhook: process.env.DISABLE_WEBHOOK !== 'false',
+          emitAcks: process.env.SEND_ACKS !== 'false',
+          connectionAttempts: 0,
+          engineType: EngineTypes.wppconnect,
+          status: StatusTypes.DISCONNECTED,
+          progressSync: 0,
+          maxSyncTimeout: 0,
+          lockInitialSync: false,
+          connected: false,
+          newLogin: false,
+        };
 
-      engine.startConnection(connectionEntity);
+        clientsArray[instanceKey] = connectionEntity;
+
+        engine.startConnection(connectionEntity);
+      }
+    } catch (e) {
+      console.log('RECONECT INSTANCES ERROR', e);
     }
   }
 
@@ -83,20 +88,27 @@ export class WhatsappService {
     }
   }
 
-  async getAllInstances() {
-    const clients = [];
-    clientsArray.map((client) => {
-      clients.push({
-        instance_key: client.instanceKey,
-        connected: true,
-        user: {
-          id: '',
-          name: '',
-        },
-      });
-    });
+  getAllInstances() {
+    try {
+      const clients = [];
+      const clientsPersisted = clientsArray;
 
-    return clients;
+      for (const instanceKey in clientsPersisted) {
+        const client = clientsPersisted[instanceKey];
+        clients.push({
+          instance_key: client.instanceKey,
+          connected: client.connected,
+          user: {
+            id: '',
+            name: '',
+          },
+        });
+      }
+
+      return clients;
+    } catch (e) {
+      console.log(`GET ALL INSTANCES ERROR`, e);
+    }
   }
 
   async getTheInstance(instanceKey: string) {
@@ -221,10 +233,13 @@ export class WhatsappService {
       const connectionEntity: ConnectionEntity<any> | undefined =
         clientsArray[instanceKey];
 
+      console.log(connectionEntity);
       if (connectionEntity) {
         const engine = this.wppConnectClient;
 
-        await this.wppConnectClient.isConnected(connectionEntity);
+        if (connectionEntity.client) {
+          await this.wppConnectClient?.isConnected(connectionEntity);
+        }
 
         return { engine, connectionEntity };
       }

@@ -1,9 +1,14 @@
-import { Controller, Get, HttpCode, Param, Post, Query } from "@nestjs/common";
-import { ApiOperation, ApiResponse, ApiTags } from "@nestjs/swagger";
-import { SentMessageSuccess, VoidSuccess } from "../domain/entities/response/response";
-import { WhatsappService } from "./services/whatsapp/whatsapp.service";
-import { EngineTypes, StatusTypes } from "../domain/entities/whatsapp/whatsapp.entity";
-import * as process from "process";
+import { Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  SentMessageSuccess,
+  VoidSuccess,
+} from '../domain/entities/response/response';
+import { WhatsappService } from './services/whatsapp/whatsapp.service';
+import {
+  EngineTypes,
+  StatusTypes,
+} from '../domain/entities/whatsapp/whatsapp.entity';
 
 @Controller('instance')
 @ApiTags('Rotinas da automação do whatsapp')
@@ -42,9 +47,9 @@ export class WhatsappController {
     description: 'Retorna a mensagem enviada.',
   })
   @ApiOperation({
-    summary: 'Check if number is registerd on WhatsApp',
+    summary: 'List all instances',
   })
-  async getAllInstances() {
+  getAllInstances() {
     return this.whatsappService.getAllInstances();
   }
 

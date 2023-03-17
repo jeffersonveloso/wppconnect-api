@@ -23,7 +23,7 @@ async function bootstrap(expressInstance: express.Express) {
     .build();
 
   const document = SwaggerModule.createDocument(app, options);
-  SwaggerModule.setup('api', app, document);
+  SwaggerModule.setup('rest', app, document);
 
   app.enableCors();
   await app.init();
