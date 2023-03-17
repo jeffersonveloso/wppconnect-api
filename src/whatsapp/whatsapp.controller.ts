@@ -56,7 +56,7 @@ export class WhatsappController {
     return this.whatsappService.getAllInstances();
   }
 
-  @Get('/instance/:instanceKey')
+  @Get('/:instanceKey')
   @HttpCode(200)
   @ApiResponse({
     status: 200,
