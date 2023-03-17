@@ -23,12 +23,12 @@ import {
   UpdatePresence,
 } from '../domain/entities/whatsapp/whatsapp.entity';
 
-@Controller('whatsapp')
+@Controller('instance')
 @ApiTags('Rotinas da automação do whatsapp')
 export class WhatsappController {
   constructor(private readonly whatsappService: WhatsappService) {}
 
-  @Post('connect')
+  @Post('init')
   @HttpCode(200)
   @ApiResponse({
     status: 200,
@@ -155,39 +155,5 @@ export class WhatsappController {
   })
   async deleteSession(@Param('instanceKey') instanceKey: string) {
     return this.whatsappService.deleteSession(instanceKey);
-  }
-
-  @Post(':instanceKey/presenceSubscribe')
-  @HttpCode(200)
-  @ApiResponse({
-    status: 200,
-    type: SentMessageSuccess,
-    description: 'Retorna a mensagem enviada.',
-  })
-  @ApiOperation({
-    summary: 'Subscribe chat presence',
-  })
-  async presenceSubscribe(
-    @Param('instanceKey') instanceKey: string,
-    @Body() body: DefaultParameters,
-  ) {
-    return this.whatsappService.presenceSubscribe(instanceKey, body);
-  }
-
-  @Post(':instanceKey/updatePresence')
-  @HttpCode(200)
-  @ApiResponse({
-    status: 200,
-    type: SentMessageSuccess,
-    description: 'Retorna a mensagem enviada.',
-  })
-  @ApiOperation({
-    summary: 'Update chat presence',
-  })
-  async updatePresence(
-    @Param('instanceKey') instanceKey: string,
-    @Body() body: UpdatePresence,
-  ) {
-    return this.whatsappService.updatePresence(instanceKey, body);
   }
 }
