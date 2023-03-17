@@ -64,7 +64,7 @@ export class WhatsappController {
     description: 'Retorna a mensagem enviada.',
   })
   @ApiOperation({
-    summary: 'Check if number is registerd on WhatsApp',
+    summary: 'Get the instance',
   })
   async getTheInstance(@Param('instanceKey') instanceKey: string) {
     return this.whatsappService.getTheInstance(instanceKey);
