@@ -718,6 +718,21 @@ export class WppConnectClient {
     }
   }
 
+  async getTheInstance(
+    connectionEntity: ConnectionEntity<wppconnect.Whatsapp>,
+  ) {
+    const jid = await connectionEntity.client?.getWid();
+
+    return {
+      instance_key: connectionEntity.instanceKey,
+      connected: true,
+      user: {
+        id: jid,
+        name: '',
+      },
+    };
+  }
+
   // send a single message
   async sendTextMessage({
     connectionEntity,

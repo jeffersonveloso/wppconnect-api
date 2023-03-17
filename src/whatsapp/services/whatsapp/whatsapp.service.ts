@@ -83,6 +83,30 @@ export class WhatsappService {
     }
   }
 
+  async getAllInstances() {
+    const clients = [];
+    clientsArray.map((client) => {
+      clients.push({
+        instance_key: client.instanceKey,
+        connected: true,
+        user: {
+          id: '',
+          name: '',
+        },
+      });
+    });
+
+    return clients;
+  }
+
+  async getTheInstance(instanceKey: string) {
+    const { engine, connectionEntity } = await this.getEngineInstance(
+      instanceKey,
+    );
+
+    return await engine.getTheInstance(connectionEntity);
+  }
+
   async getQrcode(instanceKey: string) {
     const { engine, connectionEntity } = await this.getEngineInstance(
       instanceKey,
@@ -135,11 +159,11 @@ export class WhatsappService {
   }
 
   async sendTextMessage(instanceKey: string, data: OutputTextMessage) {
-      const { engine, connectionEntity } = await this.getEngineInstance(
-        instanceKey,
-      );
+    const { engine, connectionEntity } = await this.getEngineInstance(
+      instanceKey,
+    );
 
-      return await engine.sendTextMessage({ connectionEntity, data });
+    return await engine.sendTextMessage({ connectionEntity, data });
   }
 
   async sendTextWithLinkPreview(instanceKey: string, data: OutputTextMessage) {

@@ -42,6 +42,34 @@ export class WhatsappController {
     return this.whatsappService.startConnection(body);
   }
 
+  @Get('/list')
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    type: SentMessageSuccess,
+    description: 'Retorna a mensagem enviada.',
+  })
+  @ApiOperation({
+    summary: 'Check if number is registerd on WhatsApp',
+  })
+  async getAllInstances() {
+    return this.whatsappService.getAllInstances();
+  }
+
+  @Get('/instance/:instanceKey')
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    type: SentMessageSuccess,
+    description: 'Retorna a mensagem enviada.',
+  })
+  @ApiOperation({
+    summary: 'Check if number is registerd on WhatsApp',
+  })
+  async getTheInstance(@Param('instanceKey') instanceKey: string) {
+    return this.whatsappService.getTheInstance(instanceKey);
+  }
+
   @Get('/isOnWhatsApp/:instanceKey')
   @HttpCode(200)
   @ApiResponse({
