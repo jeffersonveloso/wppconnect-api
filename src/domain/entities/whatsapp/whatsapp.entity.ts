@@ -77,7 +77,7 @@ export interface IncomingCallEventContent {
 }
 
 export class ConnectionEntity<T> {
-  @ApiProperty({ required: true })
+  @ApiProperty({ default: process.env.WEBOOK_BASE_URL, required: true })
   webhookUrl: string;
 
   @ApiProperty({ default: randomUUID(), required: true })
@@ -86,7 +86,7 @@ export class ConnectionEntity<T> {
   @ApiProperty({ default: false, required: false })
   disableWebhook?: boolean;
 
-  @ApiProperty({ default: true, required: false })
+  @ApiProperty({ default: false, required: false })
   emitAcks?: boolean;
 
   @ApiProperty({ default: 0, required: false, maximum: 10, minimum: 6 })

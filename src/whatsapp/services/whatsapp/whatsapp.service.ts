@@ -52,8 +52,8 @@ export class WhatsappService {
     for (const instanceKey of instanceKeys) {
       const engine = this.wppConnectClient;
       const connectionEntity = {
-        webhookUrl: process.env.WEBOOK_BASE_URL,
         instanceKey: instanceKey,
+        webhookUrl: process.env.WEBOOK_BASE_URL,
         disableWebhook: process.env.DISABLE_WEBHOOK !== 'false',
         emitAcks: process.env.SEND_ACKS !== 'false',
         connectionAttempts: 0,
