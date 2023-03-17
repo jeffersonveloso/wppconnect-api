@@ -549,6 +549,9 @@ export class WppConnectClient {
       connectionEntity = clientsArray[connection.instanceKey] = {
         ...connection,
         status: StatusTypes.DISCONNECTED,
+        webhookUrl: connection.webhookUrl
+          ? connection.webhookUrl
+          : process.env.WEBOOK_BASE_URL,
         progressSync: 0,
         maxSyncTimeout: 0,
         lockInitialSync: false,
