@@ -23,7 +23,7 @@ export class WhatsappController {
     description: 'Retorna o sucesso ao conectar com o whatsapp',
   })
   @ApiOperation({
-    summary: 'Chamada para realizar a conexão com o whatsapp',
+    summary: 'Chamada para realizar a conexão com o whatsapp.',
   })
   async connect(
     @Query('instanceKey') instanceKey: string,
