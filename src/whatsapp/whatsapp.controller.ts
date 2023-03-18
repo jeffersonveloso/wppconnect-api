@@ -1,4 +1,4 @@
-import { Controller, Get, HttpCode, Param, Post, Query } from '@nestjs/common';
+import { Controller, Delete, Get, HttpCode, Param, Post, Query } from "@nestjs/common";
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   SentMessageSuccess,
@@ -112,7 +112,7 @@ export class WhatsappController {
     return this.whatsappService.refreshSession(instanceKey);
   }
 
-  @Post(':instanceKey/logout')
+  @Delete(':instanceKey/logout')
   @HttpCode(200)
   @ApiResponse({
     status: 200,
@@ -126,7 +126,7 @@ export class WhatsappController {
     return this.whatsappService.logoutSession(instanceKey);
   }
 
-  @Post(':instanceKey/reset')
+  @Delete(':instanceKey/reset')
   @HttpCode(200)
   @ApiResponse({
     status: 200,
@@ -140,7 +140,7 @@ export class WhatsappController {
     return this.whatsappService.resetSession(instanceKey);
   }
 
-  @Post(':instanceKey/delete')
+  @Delete(':instanceKey/delete')
   @HttpCode(200)
   @ApiResponse({
     status: 200,

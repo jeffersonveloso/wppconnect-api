@@ -3,6 +3,7 @@ import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { SentMessageSuccess } from '../../domain/entities/response/response';
 import {
   DefaultParameters,
+  MessageData,
   UpdatePresence,
 } from '../../domain/entities/whatsapp/whatsapp.entity';
 import { WhatsappService } from '../services/whatsapp/whatsapp.service';
@@ -24,9 +25,9 @@ export class ChatController {
   })
   async presenceSubscribe(
     @Param('instanceKey') instanceKey: string,
-    @Body() body: DefaultParameters,
+    @Body() body: MessageData<DefaultParameters>,
   ) {
-    return this.whatsappService.presenceSubscribe(instanceKey, body);
+    return this.whatsappService.presenceSubscribe(instanceKey, body.data);
   }
 
   @Post(':instanceKey/updatePresence')
@@ -41,8 +42,8 @@ export class ChatController {
   })
   async updatePresence(
     @Param('instanceKey') instanceKey: string,
-    @Body() body: UpdatePresence,
+    @Body() body: MessageData<UpdatePresence>,
   ) {
-    return this.whatsappService.updatePresence(instanceKey, body);
+    return this.whatsappService.updatePresence(instanceKey, body.data);
   }
 }

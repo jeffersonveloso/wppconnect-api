@@ -239,6 +239,14 @@ export class ReadingMessages extends DefaultParameters {
   messageId: string;
 }
 
+export class MessageData<T> {
+  @ApiProperty()
+  messageData?: T;
+
+  @ApiProperty()
+  data: T;
+}
+
 export interface MessageSent {
   to: string;
   messageId: string;

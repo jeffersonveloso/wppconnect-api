@@ -22,7 +22,9 @@ import { join } from 'path';
 import {
   BadRequestException,
   ForbiddenException,
+  HttpException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { browserArgs, clientsArray } from '../../constants';
@@ -34,6 +36,8 @@ import * as QRCode from 'qrcode';
 
 @Injectable()
 export class WppConnectClient {
+  private readonly logger = new Logger(WppConnectClient.name);
+
   rootPath = join(__dirname, '../../../..', 'instances');
 
   constructor(private readonly hook: HttpHookClient) {}
@@ -743,9 +747,33 @@ export class WppConnectClient {
     connectionEntity: ConnectionEntity<wppconnect.Whatsapp>;
     data: OutputTextMessage;
   }) {
-    const { jid } = await this.isRegistered({ jid: data.to, connectionEntity });
+    try {
+      const { jid } = await this.isRegistered({
+        jid: data.to,
+        connectionEntity,
+      });
 
-    return await connectionEntity.client?.sendText(jid, data.text);
+      const response = await connectionEntity.client?.sendText(jid, data.text);
+
+      return {
+        error: false,
+        fromMe: true,
+        messageData: {
+          key: {
+            remoteJid: jid + '@c.us',
+            fromMe: true,
+            id: response.id,
+          },
+          message: {
+            extendedTextMessage: {
+              text: response.content,
+            },
+          },
+        },
+      };
+    } catch (e) {
+      throw new HttpException('SEND TEXT ERROR', 500);
+    }
   }
 
   async sendUrlMediaMessage({
@@ -755,14 +783,34 @@ export class WppConnectClient {
     connectionEntity: ConnectionEntity<wppconnect.Whatsapp>;
     data: OutputUrlMediaMessage;
   }) {
-    const { jid } = await this.isRegistered({ jid: data.to, connectionEntity });
+    try {
+      const { jid } = await this.isRegistered({
+        jid: data.to,
+        connectionEntity,
+      });
 
-    return await connectionEntity.client?.sendFile(jid, data.url, {
-      caption: data.caption,
-      mimetype: data.mimeType,
-      type: data.type,
-      footer: data.footer,
-    });
+      const response = await connectionEntity.client?.sendFile(jid, data.url, {
+        caption: data.caption,
+        mimetype: data.mimeType,
+        type: data.type,
+        footer: data.footer,
+      });
+
+      return {
+        error: false,
+        fromMe: true,
+        messageData: {
+          key: {
+            remoteJid: jid + '@c.us',
+            fromMe: true,
+            id: response.id,
+          },
+          message: response,
+        },
+      };
+    } catch (e) {
+      throw new HttpException('SEND MEDIA ERROR', 500);
+    }
   }
 
   async sendButtons({
@@ -775,18 +823,38 @@ export class WppConnectClient {
       buttonData: OutputTemplateButtonMessage;
     };
   }) {
-    const { jid } = await this.isRegistered({ jid: data.to, connectionEntity });
+    try {
+      const { jid } = await this.isRegistered({
+        jid: data.to,
+        connectionEntity,
+      });
 
-    return await connectionEntity.client?.sendText(
-      jid,
-      data.buttonData.text ?? '',
-      {
-        useTemplateButtons: true, // False for legacy
-        buttons: this.processButtons(data.buttonData.buttons),
-        title: data.buttonData.title ?? '',
-        footer: data.buttonData.footerText ?? '',
-      },
-    );
+      const response = await connectionEntity.client?.sendText(
+        jid,
+        data.buttonData.text ?? '',
+        {
+          useTemplateButtons: true, // False for legacy
+          buttons: this.processButtons(data.buttonData.buttons),
+          title: data.buttonData.title ?? '',
+          footer: data.buttonData.footerText ?? '',
+        },
+      );
+
+      return {
+        error: false,
+        fromMe: true,
+        messageData: {
+          key: {
+            remoteJid: jid + '@c.us',
+            fromMe: true,
+            id: response.id,
+          },
+          message: response,
+        },
+      };
+    } catch (e) {
+      throw new HttpException('SEND BUTTONS ERROR', 500);
+    }
   }
 
   async sendListMessage({
@@ -796,15 +864,35 @@ export class WppConnectClient {
     connectionEntity: ConnectionEntity<wppconnect.Whatsapp>;
     data: OutputListMessage;
   }) {
-    const { jid } = await this.isRegistered({ jid: data.to, connectionEntity });
+    try {
+      const { jid } = await this.isRegistered({
+        jid: data.to,
+        connectionEntity,
+      });
 
-    return await connectionEntity.client?.sendListMessage(jid, {
-      description: data.text,
-      sections: data.sections,
-      buttonText: data.buttonText,
-      footer: data.description,
-      title: data.title,
-    });
+      const response = await connectionEntity.client?.sendListMessage(jid, {
+        description: data.text,
+        sections: data.sections,
+        buttonText: data.buttonText,
+        footer: data.description,
+        title: data.title,
+      });
+
+      return {
+        error: false,
+        fromMe: true,
+        messageData: {
+          key: {
+            remoteJid: jid + '@c.us',
+            fromMe: true,
+            id: response.id,
+          },
+          message: response,
+        },
+      };
+    } catch (e) {
+      throw new HttpException('SEND LIST ERROR', 500);
+    }
   }
 
   async sendTextWithLinkPreview({
@@ -814,15 +902,39 @@ export class WppConnectClient {
     connectionEntity: ConnectionEntity<wppconnect.Whatsapp>;
     data: OutputTextMessage;
   }) {
-    const { jid } = await this.isRegistered({ jid: data.to, connectionEntity });
+    try {
+      const { jid } = await this.isRegistered({
+        jid: data.to,
+        connectionEntity,
+      });
 
-    const result = data.linkPreview
-      ? await this.extractLinkPrevThumbs(data.linkPreview)
-      : await this.generateLinkPreview(data.url);
+      const result = data.linkPreview
+        ? await this.extractLinkPrevThumbs(data.linkPreview)
+        : await this.generateLinkPreview(data.url);
 
-    return await connectionEntity.client?.sendText(jid, data.text, {
-      linkPreview: result ? result : true,
-    });
+      const response = await connectionEntity.client?.sendText(jid, data.text, {
+        linkPreview: result ? result : true,
+      });
+
+      return {
+        error: false,
+        fromMe: true,
+        messageData: {
+          key: {
+            remoteJid: jid + '@c.us',
+            fromMe: true,
+            id: response.id,
+          },
+          message: {
+            extendedTextMessage: {
+              text: response.content,
+            },
+          },
+        },
+      };
+    } catch (e) {
+      throw new HttpException('SEND TEXT WITH LINK PREVIEW ERROR', 500);
+    }
   }
 
   async presenceSubscribe({

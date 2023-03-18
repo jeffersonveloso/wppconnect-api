@@ -233,7 +233,6 @@ export class WhatsappService {
       const connectionEntity: ConnectionEntity<any> | undefined =
         clientsArray[instanceKey];
 
-      console.log(connectionEntity);
       if (connectionEntity) {
         const engine = this.wppConnectClient;
 

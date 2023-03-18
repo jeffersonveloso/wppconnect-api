@@ -1,8 +1,14 @@
 import { Body, Controller, HttpCode, Param, Post } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiOperation,
+  ApiProperty,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { SentMessageSuccess } from '../../domain/entities/response/response';
 import {
   DefaultParameters,
+  MessageData,
   OutputListMessage,
   OutputTemplateButtonMessage,
   OutputTextMessage,
@@ -28,9 +34,9 @@ export class MessageController {
   })
   async sendTextMessage(
     @Param('instanceKey') instanceKey: string,
-    @Body() body: OutputTextMessage,
+    @Body() body: MessageData<OutputTextMessage>,
   ) {
-    return this.whatsappService.sendTextMessage(instanceKey, body);
+    return this.whatsappService.sendTextMessage(instanceKey, body.messageData);
   }
 
   @Post(':instanceKey/text-force-link-preview')
@@ -46,9 +52,12 @@ export class MessageController {
   })
   async sendTextWithLinkPreview(
     @Param('instanceKey') instanceKey: string,
-    @Body() body: OutputTextMessage,
+    @Body() body: MessageData<OutputTextMessage>,
   ) {
-    return this.whatsappService.sendTextWithLinkPreview(instanceKey, body);
+    return this.whatsappService.sendTextWithLinkPreview(
+      instanceKey,
+      body.messageData,
+    );
   }
 
   @Post(':instanceKey/mediaUrl')
@@ -63,9 +72,12 @@ export class MessageController {
   })
   async sendUrlMediaMessage(
     @Param('instanceKey') instanceKey: string,
-    @Body() body: OutputUrlMediaMessage,
+    @Body() body: MessageData<OutputUrlMediaMessage>,
   ) {
-    return this.whatsappService.sendUrlMediaMessage(instanceKey, body);
+    return this.whatsappService.sendUrlMediaMessage(
+      instanceKey,
+      body.messageData,
+    );
   }
 
   @Post(':instanceKey/templateMessage')
@@ -80,9 +92,9 @@ export class MessageController {
   })
   async sendButtons(
     @Param('instanceKey') instanceKey: string,
-    @Body() body: OutputTemplateButtonMessage,
+    @Body() body: MessageData<OutputTemplateButtonMessage>,
   ) {
-    return this.whatsappService.sendButtons(instanceKey, body);
+    return this.whatsappService.sendButtons(instanceKey, body.messageData);
   }
 
   @Post(':instanceKey/listMessage')
@@ -97,42 +109,8 @@ export class MessageController {
   })
   async sendListMessage(
     @Param('instanceKey') instanceKey: string,
-    @Body() body: OutputListMessage,
+    @Body() body: MessageData<OutputListMessage>,
   ) {
-    return this.whatsappService.sendListMessage(instanceKey, body);
-  }
-
-  @Post(':instanceKey/presenceSubscribe')
-  @HttpCode(200)
-  @ApiResponse({
-    status: 200,
-    type: SentMessageSuccess,
-    description: '',
-  })
-  @ApiOperation({
-    summary: 'Subscribe chat presence',
-  })
-  async presenceSubscribe(
-    @Param('instanceKey') instanceKey: string,
-    @Body() body: DefaultParameters,
-  ) {
-    return this.whatsappService.presenceSubscribe(instanceKey, body);
-  }
-
-  @Post(':instanceKey/updatePresence')
-  @HttpCode(200)
-  @ApiResponse({
-    status: 200,
-    type: SentMessageSuccess,
-    description: '',
-  })
-  @ApiOperation({
-    summary: 'Update chat presence',
-  })
-  async updatePresence(
-    @Param('instanceKey') instanceKey: string,
-    @Body() body: UpdatePresence,
-  ) {
-    return this.whatsappService.updatePresence(instanceKey, body);
+    return this.whatsappService.sendListMessage(instanceKey, body.messageData);
   }
 }
