@@ -26,7 +26,7 @@ export class WhatsappController {
     summary: 'Chamada para realizar a conexão com o whatsapp.',
   })
   async connect(
-    @Query('instanceKey') instanceKey: string,
+    @Query('instance_key') instanceKey: string,
   ): Promise<VoidSuccess> {
     return this.whatsappService.startConnection({
       webhookUrl: process.env.WEBOOK_BASE_URL,
