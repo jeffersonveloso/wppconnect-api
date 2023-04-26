@@ -21,7 +21,6 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
-    "@adiwajshing/baileys": "github:adiwajshing/baileys",
     "@hapi/boom": "^9.1.4",
     "@nestjs/axios": "^0.0.7",
     "@nestjs/common": "^8.0.0",
@@ -30,7 +29,7 @@
     "@nestjs/passport": "^8.2.1",
     "@nestjs/platform-express": "^8.4.3",
     "@nestjs/swagger": "^5.2.1",
-    "@wppconnect-team/wppconnect": "^1.22.0",
+    "@wppconnect-team/wppconnect": "^1.23.2",
     "express": "^4.17.3",
     "link-preview-js": "^3.0.4",
     "passport": "^0.5.2",

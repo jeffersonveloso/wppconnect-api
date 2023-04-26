@@ -789,6 +789,8 @@ export class WppConnectClient {
         connectionEntity,
       });
 
+      console.log('DATA sendUrlMediaMessage', data);
+
       const response = await connectionEntity.client?.sendFile(jid, data.url, {
         caption: data.caption,
         mimetype: data.mimeType,
