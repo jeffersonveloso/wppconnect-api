@@ -15,9 +15,9 @@ import {
   UpdatePresence,
 } from '../../../domain/entities/whatsapp/whatsapp.entity';
 import {
-  ConnectionEvent,
-  VoidSuccess,
-} from '../../../domain/entities/response/response';
+  ConnectionEvent, SuccessResponse,
+  VoidSuccess
+} from "../../../domain/entities/response/response";
 import { join } from 'path';
 import {
   BadRequestException,
@@ -491,8 +491,8 @@ export class WppConnectClient {
           session: connectionEntity.instanceKey,
           tokenStore: 'file',
           folderNameToken: `${this.rootPath}/wppconnect`, //folder name when saving tokens
-          //deviceName: process.env.BROWSER_CLIENT,
           puppeteerOptions: {
+            //headless: true,
             userDataDir: `${this.rootPath}/wppconnect/${connectionEntity.instanceKey}`, // or your custom directory
             executablePath:
               process.platform === 'linux'
@@ -760,7 +760,7 @@ export class WppConnectClient {
         fromMe: true,
         messageData: {
           key: {
-            remoteJid: jid + '@c.us',
+            remoteJid: this.createId(jid),
             fromMe: true,
             id: response.id,
           },
@@ -772,7 +772,23 @@ export class WppConnectClient {
         },
       };
     } catch (e) {
+      console.log("sendTextMessage ERROR", e);
       throw new HttpException('SEND TEXT ERROR', 500);
+    }
+  }
+
+  async urlToBuffer(url: string) {
+    try {
+      const response = await this.hook.makeGetRequest<SuccessResponse<any>>(url, {
+        responseType: "arraybuffer",
+      });
+
+      const responseData = (response.data as SuccessResponse<any>) as any;
+
+      return "data:image/png;base64," + Buffer.from(responseData).toString('base64')
+    } catch (error) {
+      console.log("urlToBuffer ERROR", error);
+      throw error;
     }
   }
 
@@ -789,9 +805,13 @@ export class WppConnectClient {
         connectionEntity,
       });
 
-      console.log('DATA sendUrlMediaMessage', data);
+      let file = data.url
 
-      const response = await connectionEntity.client?.sendFile(jid, data.url, {
+      if(data.type === 'image'){
+        file = await this.urlToBuffer(data.url);
+      }
+
+      const response = await connectionEntity.client?.sendFile(jid, file, {
         caption: data.caption,
         mimetype: data.mimeType,
         type: data.type,
@@ -803,7 +823,7 @@ export class WppConnectClient {
         fromMe: true,
         messageData: {
           key: {
-            remoteJid: jid + '@c.us',
+            remoteJid: this.createId(jid),
             fromMe: true,
             id: response.id,
           },
@@ -811,9 +831,44 @@ export class WppConnectClient {
         },
       };
     } catch (e) {
+      console.log("sendUrlMediaMessage ERROR", e);
       throw new HttpException('SEND MEDIA ERROR', 500);
     }
   }
+
+  async sendUrlImageMessage({connectionEntity,data}: {
+    connectionEntity: ConnectionEntity<wppconnect.Whatsapp>;
+    data: OutputUrlMediaMessage;
+  }) {
+    try {
+      const { jid } = await this.isRegistered({
+        jid: data.to,
+        connectionEntity,
+      });
+
+      const base64Image = await this.urlToBuffer(data.url);
+
+      const response = await connectionEntity.client?.sendImageFromBase64(jid, base64Image, "document", data.caption, null, false);
+
+      return {
+        error: false,
+        fromMe: true,
+        messageData: {
+          key: {
+            remoteJid: this.createId(jid),
+            fromMe: true,
+            id: response.id,
+          },
+          message: response,
+        },
+      };
+    } catch (e) {
+      console.log("sendUrlImageMessage ERROR", e);
+      throw new HttpException('SEND IMAGE ERROR', 500);
+    }
+  }
+
+
 
   async sendButtons({
     connectionEntity,
@@ -847,7 +902,7 @@ export class WppConnectClient {
         fromMe: true,
         messageData: {
           key: {
-            remoteJid: jid + '@c.us',
+            remoteJid: this.createId(jid),
             fromMe: true,
             id: response.id,
           },
@@ -855,6 +910,7 @@ export class WppConnectClient {
         },
       };
     } catch (e) {
+      console.log("sendButtons ERROR", e);
       throw new HttpException('SEND BUTTONS ERROR', 500);
     }
   }
@@ -885,7 +941,7 @@ export class WppConnectClient {
         fromMe: true,
         messageData: {
           key: {
-            remoteJid: jid + '@c.us',
+            remoteJid: this.createId(jid),
             fromMe: true,
             id: response.id,
           },
@@ -893,6 +949,7 @@ export class WppConnectClient {
         },
       };
     } catch (e) {
+      console.log("sendListMessage ERROR", e);
       throw new HttpException('SEND LIST ERROR', 500);
     }
   }
@@ -923,7 +980,7 @@ export class WppConnectClient {
         fromMe: true,
         messageData: {
           key: {
-            remoteJid: jid + '@c.us',
+            remoteJid: this.createId(jid),
             fromMe: true,
             id: response.id,
           },
@@ -935,6 +992,7 @@ export class WppConnectClient {
         },
       };
     } catch (e) {
+      console.log("sendTextWithLinkPreview ERROR", e);
       throw new HttpException('SEND TEXT WITH LINK PREVIEW ERROR', 500);
     }
   }
@@ -946,20 +1004,28 @@ export class WppConnectClient {
     connectionEntity: ConnectionEntity<wppconnect.Whatsapp>;
     data: { to: string };
   }) {
-    const { jid } = await this.isRegistered({ jid: data.to, connectionEntity });
+    try {
+      const { jid } = await this.isRegistered({ jid: data.to, connectionEntity });
 
-    return await connectionEntity.client?.subscribePresence(this.createId(jid));
+      return await connectionEntity.client?.subscribePresence(this.createId(jid));
+    }catch (e) {
+      console.log("presenceSubscribe ERROR", e);
+    }
   }
 
   async presenceSubscribeInAllChats(
     connectionEntity: ConnectionEntity<wppconnect.Whatsapp>,
   ) {
-    // subcribe all groups participants
-    const chats = await connectionEntity.client?.getAllChats();
+    try {
+      // subcribe all groups participants
+      const chats = await connectionEntity.client?.getAllChats();
 
-    return await connectionEntity.client?.subscribePresence(
-      chats.map((c) => c.id._serialized),
-    );
+      return await connectionEntity.client?.subscribePresence(
+        chats.map((c) => c.id._serialized),
+      );
+    }catch (e) {
+      console.log("presenceSubscribeInAllChats ERROR", e);
+    }
   }
 
   async updatePresence({
@@ -969,16 +1035,20 @@ export class WppConnectClient {
     connectionEntity: ConnectionEntity<wppconnect.Whatsapp>;
     data: UpdatePresence;
   }) {
-    const { jid } = await this.isRegistered({ jid: data.to, connectionEntity });
+    try {
+      const { jid } = await this.isRegistered({ jid: data.to, connectionEntity });
 
-    if (data.presence === PresenceTypes.available) {
-      return await connectionEntity.client?.setOnlinePresence(true);
-    } else if (data.presence === PresenceTypes.unavailable) {
-      return await connectionEntity.client?.setOnlinePresence(false);
-    } else if (data.presence === PresenceTypes.composing) {
-      return await connectionEntity.client?.startTyping(jid);
-    } else if (data.presence === PresenceTypes.paused) {
-      return await connectionEntity.client?.stopTyping(jid);
+      if (data.presence === PresenceTypes.available) {
+        return await connectionEntity.client?.setOnlinePresence(true);
+      } else if (data.presence === PresenceTypes.unavailable) {
+        return await connectionEntity.client?.setOnlinePresence(false);
+      } else if (data.presence === PresenceTypes.composing) {
+        return await connectionEntity.client?.startTyping(jid);
+      } else if (data.presence === PresenceTypes.paused) {
+        return await connectionEntity.client?.stopTyping(jid);
+      }
+    }catch (e) {
+      console.log("updatePresence ERROR", e);
     }
   }
 }

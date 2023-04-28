@@ -193,6 +193,14 @@ export class WhatsappService {
     return await engine.sendUrlMediaMessage({ connectionEntity, data });
   }
 
+  async sendUrlImageMessage(instanceKey: string, data: OutputUrlMediaMessage) {
+    const { engine, connectionEntity } = await this.getEngineInstance(
+      instanceKey,
+    );
+
+    return await engine.sendUrlImageMessage({ connectionEntity, data });
+  }
+
   async sendButtons(instanceKey: string, data: OutputTemplateButtonMessage) {
     const { engine, connectionEntity } = await this.getEngineInstance(
       instanceKey,

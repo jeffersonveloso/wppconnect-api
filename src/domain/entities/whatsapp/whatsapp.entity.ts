@@ -146,7 +146,7 @@ export class OutputTextMessage extends DefaultParameters {
 }
 
 export class OutputUrlMediaMessage extends DefaultParameters {
-  @ApiProperty()
+  @ApiProperty({required: true})
   type: 'video' | 'audio' | 'image' | 'document';
 
   @ApiProperty()

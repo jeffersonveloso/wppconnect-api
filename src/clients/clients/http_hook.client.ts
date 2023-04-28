@@ -23,7 +23,7 @@ export class HttpHookClient {
     headers = HttpHookClient.getHeader(),
   ): Promise<SuccessResponse<T>> {
     return new Promise((resolve, reject) => {
-      this.http.post<AxiosResponse>(url, body).subscribe({
+      this.http.post<AxiosResponse>(url, body, headers).subscribe({
         next: (response) => {
           if (response.status >= 200 && response.status <= 299) {
             return resolve(
@@ -48,7 +48,7 @@ export class HttpHookClient {
     headers = HttpHookClient.getHeader(),
   ): Promise<SuccessResponse<T>> {
     return new Promise((resolve, reject) => {
-      this.http.get<AxiosResponse>(url).subscribe({
+      this.http.get<AxiosResponse>(url, headers).subscribe({
         next: (response) => {
           if (response.status >= 200 && response.status <= 299) {
             return resolve(
