@@ -1,5 +1,6 @@
 export enum ConnectionState {
   isLogged = 'isLogged',
+  inChat = 'inChat',
   notLogged = 'notLogged',
   browserClose = 'browserClose',
   qrReadSuccess = 'qrReadSuccess',

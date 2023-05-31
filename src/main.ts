@@ -27,7 +27,7 @@ async function bootstrap(expressInstance: express.Express) {
 
   app.enableCors();
   await app.init();
-  await app.listen(process.env.SERVER_PORT || 3000, process.env.HOST);
+  await app.listen(process.env.SERVER_PORT || 3001, process.env.HOST);
 }
 
 bootstrap(server);

@@ -106,6 +106,8 @@ export class WppConnectClient {
 
       if (SocketState.UNPAIRED.includes(state)) {
         connectionEntity.status = StatusTypes.DISCONNECTED;
+        connectionEntity.qrCode = null;
+
         this.updateClient(connectionEntity);
 
         await this.notifyHook(
@@ -242,24 +244,27 @@ export class WppConnectClient {
     attempt: number;
     connectionEntity: ConnectionEntity<wppconnect.Whatsapp>;
   }) {
+
+    qrCode = qrCode.replace('data:image/png;base64,', '');
+    const imageBuffer = Buffer.from(qrCode, 'base64');
+    const qrCodeBase64 = 'data:image/png;base64,' + imageBuffer.toString('base64');
+
     connectionEntity = {
       ...connectionEntity,
       status: StatusTypes.CONNECTING,
       urlcode: urlCode,
+      qrCode: qrCodeBase64,
       connectionAttempts: attempt,
     };
 
     this.updateClient(connectionEntity);
-
-    qrCode = qrCode.replace('data:image/png;base64,', '');
-    const imageBuffer = Buffer.from(qrCode, 'base64');
 
     await this.notifyHook(
       new ConnectionEvent({
         instanceKey: connectionEntity.instanceKey,
         eventType: EventTypes.QRCODE,
         status: StatusTypes.CONNECTING,
-        qrcode: 'data:image/png;base64,' + imageBuffer.toString('base64'),
+        qrcode: qrCodeBase64
       }),
       connectionEntity,
     );
@@ -374,7 +379,7 @@ export class WppConnectClient {
     ) {
       connectionEntity.status = StatusTypes.DISCONNECTED;
       await connectionEntity.client?.close();
-      clientsArray[session] = undefined;
+      clientsArray[session].client = undefined;
     } else if (
       statusSession === ConnectionState.browserClose ||
       statusSession === ConnectionState.qrReadFail ||
@@ -405,8 +410,8 @@ export class WppConnectClient {
         connectionEntity,
       );
     } else if (
-      statusSession === 'isLogged' ||
-      statusSession === 'qrReadSuccess'
+      statusSession === ConnectionState.isLogged ||
+      statusSession === ConnectionState.qrReadSuccess
     ) {
       connectionEntity.status = StatusTypes.SYNCHRONIZING;
 
@@ -419,7 +424,7 @@ export class WppConnectClient {
         }),
         connectionEntity,
       );
-    } else if (statusSession === 'inChat') {
+    } else if (statusSession === ConnectionState.inChat) {
       connectionEntity = {
         ...connectionEntity,
         status: StatusTypes.CONNECTED,
@@ -489,7 +494,7 @@ export class WppConnectClient {
 
         const wppClient = await wppconnect.create({
           session: connectionEntity.instanceKey,
-          tokenStore: 'file',
+          //tokenStore: 'file',
           folderNameToken: `${this.rootPath}/wppconnect`, //folder name when saving tokens
           puppeteerOptions: {
             //headless: true,
@@ -640,15 +645,7 @@ export class WppConnectClient {
     try {
       await connectionEntity.client?.logout(); //Faz logout gera novamente o qrcode
     } catch (e) {
-      const sessionFolder = `${this.rootPath}/wppconnect/${connectionEntity.instanceKey}`;
-
-      if (existsSync(sessionFolder)) {
-        rmSync(sessionFolder, {
-          force: true,
-          recursive: true,
-          maxRetries: 10,
-        });
-      }
+      this.deleteSessionDirectory(connectionEntity.instanceKey);
     }
 
     delete clientsArray[connectionEntity.instanceKey];
@@ -657,15 +654,7 @@ export class WppConnectClient {
 
   async resetSession(connectionEntity: ConnectionEntity<wppconnect.Whatsapp>) {
     try {
-      const sessionFolder = `${this.rootPath}/wppconnect/${connectionEntity.instanceKey}`;
-
-      if (existsSync(sessionFolder)) {
-        rmSync(sessionFolder, {
-          force: true,
-          recursive: true,
-          maxRetries: 10,
-        });
-      }
+      this.deleteSessionDirectory(connectionEntity.instanceKey);
 
       await connectionEntity.client?.close(); //FECHA O BROWSER
 
@@ -693,7 +682,49 @@ export class WppConnectClient {
     }
   }
 
+  deleteSessionDirectory(instanceKey: string){
+    try {
+      const sessionFolder = `${this.rootPath}/wppconnect/${instanceKey}`;
+
+      if (existsSync(sessionFolder)) {
+        rmSync(sessionFolder, {
+          force: true,
+          recursive: true,
+          maxRetries: 10,
+        });
+      }
+    }catch (e) {
+      console.log("ERROR: forceDeleteSessionDirectory",e);
+    }
+  }
+
   async getQrCode(connectionEntity: ConnectionEntity<wppconnect.Whatsapp>) {
+    try {
+      if (connectionEntity.qrCode) {
+        await this.notifyHook(
+          new ConnectionEvent({
+            instanceKey: connectionEntity.instanceKey,
+            eventType: EventTypes.QRCODE,
+            status: StatusTypes.CONNECTING,
+            qrcode: connectionEntity.qrCode
+          }),
+          connectionEntity,
+        );
+
+        return {
+          success: true,
+          message: 'Qrcode generate with successfull',
+          qrcode: connectionEntity.qrCode
+        };
+      } else {
+        await this.getBase64QrCode(connectionEntity);
+      }
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
+  }
+
+  async getBase64QrCode(connectionEntity: ConnectionEntity<wppconnect.Whatsapp>){
     try {
       if (connectionEntity.urlcode) {
         const qr = connectionEntity.urlcode

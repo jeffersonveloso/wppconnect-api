@@ -97,6 +97,7 @@ export class ConnectionEntity<T> {
 
   status: StatusTypes;
   urlcode?: string;
+  qrCode?: string;
   progressSync?: number;
   maxSyncTimeout?: number;
   lockInitialSync?: boolean;

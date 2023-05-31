@@ -81,6 +81,7 @@ export class WhatsappService {
         return await this.wppConnectClient.startConnection(connection);
       }
     } catch (e) {
+      console.log('ERROR: startConnection', e);
       throw new HttpException(
         'Internal server error.',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -119,12 +120,20 @@ export class WhatsappService {
     return await engine.getTheInstance(connectionEntity);
   }
 
-  async getQrcode(instanceKey: string) {
+  async getQrCode(instanceKey: string) {
     const { engine, connectionEntity } = await this.getEngineInstance(
       instanceKey,
     );
 
     return await engine.getQrCode(connectionEntity);
+  }
+
+  async getBase64QrCode(instanceKey: string) {
+    const { engine, connectionEntity } = await this.getEngineInstance(
+      instanceKey,
+    );
+
+    return await engine.getBase64QrCode(connectionEntity);
   }
 
   async isOnWhatsApp(instanceKey: string, remoteJid: string) {
@@ -251,6 +260,7 @@ export class WhatsappService {
         return { engine, connectionEntity };
       }
 
+      this.wppConnectClient.deleteSessionDirectory(instanceKey);
       throw new NotFoundException('Instance not found.');
     } catch (e) {
       console.log('GET ENGINE INSTANCE ERROR', e);

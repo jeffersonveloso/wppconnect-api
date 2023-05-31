@@ -95,8 +95,23 @@ export class WhatsappController {
     summary: 'Get qrcode',
   })
   async getQrcode(@Param('instanceKey') instanceKey: string) {
-    return this.whatsappService.getQrcode(instanceKey);
+    return this.whatsappService.getQrCode(instanceKey);
   }
+
+  @Get('qrcode_base64/:instanceKey')
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    type: SentMessageSuccess,
+    description: 'Retorna a mensagem enviada.',
+  })
+  @ApiOperation({
+    summary: 'Get qrcode in base64',
+  })
+  async getBase64QrCode(@Param('instanceKey') instanceKey: string) {
+    return this.whatsappService.getBase64QrCode(instanceKey);
+  }
+
 
   @Post(':instanceKey/refreshSingleInstance')
   @HttpCode(200)
