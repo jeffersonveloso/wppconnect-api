@@ -1,9 +1,9 @@
 import {
   HttpException,
   HttpStatus,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+  Injectable, InternalServerErrorException,
+  NotFoundException
+} from "@nestjs/common";
 import {
   ConnectionEntity,
   DefaultParameters,
@@ -17,7 +17,7 @@ import {
 } from '../../../domain/entities/whatsapp/whatsapp.entity';
 import { WppConnectClient } from '../../../utils/engines/wppconnect/wppconnect';
 import { clientsArray } from '../../../utils/constants';
-import { readdirSync } from 'fs';
+import { readdirSync, rmSync, existsSync } from 'fs';
 import { join } from 'path';
 
 @Injectable()
@@ -96,9 +96,12 @@ export class WhatsappService {
 
       for (const instanceKey in clientsPersisted) {
         const client = clientsPersisted[instanceKey];
+
         clients.push({
           instance_key: client.instanceKey,
           connected: client.connected,
+          engine: client.engineType,
+          status: client.status,
           user: {
             id: '',
             name: '',
@@ -260,17 +263,51 @@ export class WhatsappService {
         return { engine, connectionEntity };
       }
 
-      this.wppConnectClient.deleteSessionDirectory(instanceKey);
-      throw new NotFoundException('Instance not found.');
+      this.deleteSessionDirectory(instanceKey);
     } catch (e) {
       console.log('GET ENGINE INSTANCE ERROR', e);
       if (e instanceof HttpException) {
         throw e;
       }
 
-      this.wppConnectClient.deleteSessionDirectory(instanceKey);
-
-      throw new NotFoundException('Instance not found.');
+      this.deleteSessionDirectory(instanceKey);
     }
   }
+
+  async deleteAllOfllineInstances(engine: string) {
+        try {
+            let instanceKeys: string[] = [];
+            const path = `${this.rootPath}/${engine}`
+            const listOfFiles = readdirSync(path);
+
+            listOfFiles.map((file) => {
+                file != ".gitkeep" ? instanceKeys.push(file) : null;
+            });
+
+            instanceKeys.map((key) => {
+                if (clientsArray[key] && clientsArray[key].connected === false) {
+                    rmSync(`${path}/${key}`, {
+                        recursive: true,
+                        force: true,
+                        maxRetries: 10
+                    });
+
+                    delete clientsArray[key];
+                }
+            });
+
+            return {
+                success: false,
+                message: `All offline ${engine} instances deleted.`,
+            };
+        } catch (e) {
+            console.log("deleteAllOfllineInstances ERROR", e);
+            throw new InternalServerErrorException(e);
+        }
+    }
+
+    deleteSessionDirectory(instanceKey){
+      this.wppConnectClient.deleteSessionDirectory(instanceKey);
+      throw new NotFoundException('Instance not found.');
+    }
 }

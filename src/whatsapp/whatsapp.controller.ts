@@ -168,4 +168,18 @@ export class WhatsappController {
   async deleteSession(@Param('instanceKey') instanceKey: string) {
     return this.whatsappService.deleteSession(instanceKey);
   }
+
+  @Delete(':engine/delete-offline-instances')
+  @HttpCode(200)
+  @ApiResponse({
+    status: 200,
+    type: SentMessageSuccess,
+    description: '',
+  })
+  @ApiOperation({
+    summary: 'Delete all offline sessions',
+  })
+  async deleteAllOfllineInstances(@Param('engine') engine: string) {
+    return this.whatsappService.deleteAllOfllineInstances(engine);
+  }
 }
