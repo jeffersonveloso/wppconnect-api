@@ -268,10 +268,9 @@ export class WhatsappService {
         throw e;
       }
 
-      throw new HttpException(
-        'Internal server error.',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      this.wppConnectClient.deleteSessionDirectory(instanceKey);
+
+      throw new NotFoundException('Instance not found.');
     }
   }
 }
